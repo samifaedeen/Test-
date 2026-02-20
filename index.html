@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Temp Mail</title>
+</head>
+
+<body style="font-family:Arial;text-align:center">
+
+<h2>📧 Temp Mail</h2>
+
+<button onclick="generateMail()">Generate Email</button>
+<p id="email"></p>
+
+<h3>📥 Inbox</h3>
+<div id="inbox">No messages</div>
+
+<script>
+
+let login, domain;
+
+async function generateMail(){
+
+let res = await fetch("https://api.allorigins.win/raw?url=https://www.1secmail.com/api/v1/?action=genRandomMailbox");
+let data = await res.json();
+
+document.getElementById("email").innerText = data[0];
+
+let parts = data[0].split("@");
+login = parts[0];
+domain = parts[1];
+
+loadInbox();
+
+setInterval(loadInbox,5000);
+}
+
+async function loadInbox(){
+
+if(!login) return;
+
+let res = await fetch(`https://api.allorigins.win/raw?url=https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`);
+let msgs = await res.json();
+
+let inbox = document.getElementById("inbox");
+
+if(msgs.length === 0){
+inbox.innerHTML="⏳ Waiting for mails...";
+return;
+}
+
+inbox.innerHTML="";
+
+msgs.forEach(msg=>{
+
+inbox.innerHTML += `
+<p>
+<b>${msg.from}</b><br>
+${msg.subject}<br>
+<button onclick="readMail(${msg.id})">Read</button>
+</p>
+`;
+
+});
+}
+
+async function readMail(id){
+
+let res = await fetch(`https://api.allorigins.win/raw?url=https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${id}`);
+let mail = await res.json();
+
+alert(mail.textBody || mail.htmlBody);
+
+}
+
+</script>
+
+</body>
+</html>
