@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Temp Mail Live Demo</title>
+
+<style>
+body{
+font-family: Arial;
+background:#f2f2f2;
+text-align:center;
+padding:30px;
+}
+
+.container{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+max-width:600px;
+margin:auto;
+}
+
+button{
+padding:10px 20px;
+border:none;
+background:#4CAF50;
+color:white;
+border-radius:5px;
+cursor:pointer;
+}
+
+.mail{
+font-size:20px;
+margin:15px 0;
+color:#333;
+}
+
+.msg{
+border:1px solid #ddd;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+text-align:left;
+background:#fafafa;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🚀 Temp Mail Demo</h2>
+
+<button onclick="generateMail()">Generate Email</button>
+
+<div class="mail" id="email"></div>
+
+<h3>📥 Inbox</h3>
+<div id="inbox">No messages</div>
+
+</div>
+
+<script>
+
+let login, domain;
+let refresh;
+
+function generateMail(){
+
+fetch("https://www.1secmail.com/api/v1/?action=genRandomMailbox")
+.then(res=>res.json())
+.then(data=>{
+
+document.getElementById("email").innerHTML = data[0];
+
+let parts = data[0].split("@");
+login = parts[0];
+domain = parts[1];
+
+loadInbox();
+
+clearInterval(refresh);
+refresh = setInterval(loadInbox,5000);
+
+});
+
+}
+
+function loadInbox(){
+
+if(!login) return;
+
+fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${login}&domain=${domain}`)
+.then(res=>res.json())
+.then(msgs=>{
+
+let inbox = document.getElementById("inbox");
+
+if(msgs.length===0){
+inbox.innerHTML="⏳ Waiting for OTP...";
+return;
+}
+
+inbox.innerHTML="";
+
+msgs.forEach(msg=>{
+
+let div = document.createElement("div");
+div.className="msg";
+
+div.innerHTML=`
+<b>From:</b> ${msg.from}<br>
+<b>Subject:</b> ${msg.subject}<br>
+<button onclick="readMail(${msg.id})">Read</button>
+`;
+
+inbox.appendChild(div);
+
+});
+
+});
+
+}
+
+function readMail(id){
+
+fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${login}&domain=${domain}&id=${id}`)
+.then(res=>res.json())
+.then(mail=>{
+
+alert(mail.textBody || mail.htmlBody);
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
