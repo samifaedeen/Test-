@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PrivacyName Pro</title>
+    <!-- Google Fonts: Inter & Courier Prime for OTP -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #05070a;
+            --card-bg: rgba(15, 20, 30, 0.65);
+            --glass-panel: rgba(255, 255, 255, 0.03);
+            --accent-color: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.4);
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --input-bg: rgba(10, 15, 25, 0.8);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.3);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(0, 210, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 210, 255, 0.06), transparent 30%),
+                radial-gradient(circle at 85% 30%, rgba(138, 43, 226, 0.06), transparent 30%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Behind Card */
+        .glow-bg {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: var(--accent-color);
+            filter: blur(150px);
+            opacity: 0.15;
+            z-index: -1;
+            animation: pulseGlow 8s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1) translate(0px, 0px); opacity: 0.1; }
+            100% { transform: scale(1.2) translate(20px, -20px); opacity: 0.2; }
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 2rem;
+            border-radius: 28px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255,255,255,0.08);
+            width: 100%;
+            max-width: 440px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top Actions (Icons) */
+        .top-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .icon-btn.stroke-icon svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon-btn.telegram-btn:hover {
+            color: #2AABEE;
+            border-color: rgba(42, 171, 238, 0.4);
+            box-shadow: 0 5px 15px rgba(42, 171, 238, 0.2);
+        }
+        .icon-btn:active { transform: scale(0.92); }
+
+        /* Profile Header */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-top: 10px;
+        }
+
+        .avatar-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 12px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0,210,255,0.1), rgba(58,123,213,0.1));
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 20px var(--accent-glow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-color);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .avatar-container svg { width: 40px; height: 40px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        .profile-header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #ffffff, var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .date-display {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        /* 2FA Section Accordion */
+        .two-fa-container {
+            margin-bottom: 25px;
+            background: var(--glass-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .two-fa-toggle {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 16px;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .two-fa-toggle:hover { background: rgba(255,255,255,0.05); }
+        .two-fa-toggle svg { width: 16px; height: 16px; transition: transform 0.3s ease; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .two-fa-toggle.active svg { transform: rotate(180deg); }
+
+        .two-fa-content {
+            display: none;
+            padding: 0 20px 20px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .two-fa-content.active { display: block; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 2FA UI */
+        .input-group { position: relative; margin-bottom: 12px; }
+
+        textarea {
+            width: 100%;
+            height: 75px;
+            padding: 14px 70px 14px 14px; /* Space for paste btn */
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px; /* Prevents zoom on iOS */
+            outline: none;
+            resize: none;
+            background: var(--input-bg);
+            color: var(--accent-color);
+            transition: 0.3s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            font-family: monospace;
+        }
+        
+        textarea::placeholder { color: #475569; font-family: 'Inter', sans-serif; }
+        textarea:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.15); }
+
+        .paste-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            backdrop-filter: blur(5px);
+        }
+
+        .paste-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--accent-color); }
+        .paste-btn:active { transform: scale(0.95); }
+
+        .btn-row { display: flex; gap: 10px; margin-bottom: 15px; }
+
+        .btn-sub {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-gen { background: rgba(0, 210, 255, 0.1); color: var(--accent-color); border-color: rgba(0, 210, 255, 0.3); }
+        .btn-gen:hover { background: rgba(0, 210, 255, 0.2); border-color: var(--accent-color); }
+        .btn-gen:active { transform: scale(0.96); }
+
+        .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-color: rgba(239, 68, 68, 0.3); }
+        .btn-del:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger-color); }
+        .btn-del:active { transform: scale(0.96); }
+
+        .result-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px dashed var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .otp-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+
+        .otp-code {
+            font-family: 'Courier Prime', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            letter-spacing: 4px;
+            margin: 5px 0 10px;
+            text-shadow: 0 0 15px var(--accent-glow);
+            word-break: break-all;
+            line-height: 1;
+            min-height: 40px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 1s linear, background-color 0.3s ease;
+        }
+
+        .timer-info { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 12px; }
+
+        .copy-code-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .copy-code-btn:hover { border-color: var(--accent-color); background: rgba(0,210,255,0.05); }
+        .copy-code-btn:active { transform: scale(0.96); }
+
+        /* Generator Area */
+        .generator-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+
+        .name-block { display: flex; flex-direction: column; gap: 6px; position: relative; }
+
+        .name-block label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            padding-left: 5px;
+            font-weight: 600;
+        }
+
+        .display-wrapper { position: relative; display: flex; width: 100%; }
+
+        .display-box {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 1rem 3.5rem 1rem 1rem;
+            border-radius: 14px;
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: left;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 0 0 10px rgba(0,210,255,0.1);
+        }
+        
+        .display-box.animate-text { animation: textReveal 0.4s ease forwards; }
+
+        @keyframes textReveal {
+            0% { opacity: 0; transform: translateY(5px); filter: blur(2px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .btn-copy-mini {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            border: 1px solid var(--border-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-copy-mini:hover { border-color: var(--accent-color); color: var(--text-main); background: rgba(0, 210, 255, 0.1); }
+        .btn-copy-mini:active { transform: translateY(-50%) scale(0.9); }
+
+        .btn-generate {
+            width: 100%;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: #fff;
+            box-shadow: 0 8px 25px var(--accent-glow);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-generate:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px var(--accent-glow); }
+        .btn-generate:active { transform: translateY(0) scale(0.98); }
+
+        /* Loading Spinner for buttons */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s ease-in-out infinite;
+            display: none;
+            position: absolute;
+        }
+        
+        .spinner.accent {
+            border: 3px solid rgba(0, 210, 255, 0.2);
+            border-top-color: var(--accent-color);
+            position: relative;
+            margin: auto;
+            display: inline-block;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            z-index: 1000;
+            padding: 40px 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .modal.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: var(--bg-dark);
+            padding: 2rem;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255,255,255,0.05);
+            transform: translateY(30px) scale(0.95);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: auto;
+            position: relative;
+        }
+
+        .modal.active .modal-content { transform: translateY(0) scale(1); }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h3 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+        .close-btn { 
+            cursor:pointer; color: var(--text-dim); transition: 0.3s; 
+            width: 32px; height: 32px; background: rgba(255,255,255,0.05);
+            border-radius: 50%; display: grid; place-items: center;
+        }
+        .close-btn:hover { background: var(--danger-color); color: #fff; transform: rotate(90deg); }
+
+        .setting-item { margin-bottom: 1.2rem; text-align: left; }
+
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            background: var(--input-bg);
+            color: white;
+            padding: 0.9rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-top: 6px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 16px; /* 16px to prevent zoom */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.15); }
+
+        select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            background: rgba(255,255,255,0.02);
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #94a3b8; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--success-color); }
+        input:checked + .slider:before { transform: translateX(20px); background-color: white; }
+
+        #historyList {
+            max-height: 40vh;
+            overflow-y: auto;
+            margin-top: 5px;
+            padding-right: 5px;
+            scroll-behavior: smooth;
+        }
+
+        #historyList::-webkit-scrollbar { width: 5px; }
+        #historyList::-webkit-scrollbar-track { background: transparent; }
+        #historyList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+        .history-item {
+            background: rgba(255,255,255,0.03);
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .history-item:hover { background: rgba(255,255,255,0.06); transform: translateX(3px); border-color: rgba(255,255,255,0.15); }
+
+        .history-info { text-align: left; }
+        .history-info strong { color: var(--text-main); display: block; margin-bottom: 4px; font-size: 0.9rem; }
+        .history-info span { font-size: 0.75rem; color: var(--accent-color); font-weight: 600; background: rgba(0, 210, 255, 0.1); padding: 2px 6px; border-radius: 6px; }
+
+        .del-btn { color: var(--danger-color); cursor: pointer; background: rgba(239, 68, 68, 0.1); border: none; padding: 6px; border-radius: 8px; transition: 0.3s; display: grid; place-items: center; }
+        .del-btn:hover { background: var(--danger-color); color: #fff; transform: scale(1.1); }
+        .del-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        .history-footer-btns { display: flex; gap: 10px; margin-top: 15px; }
+
+        .btn-small {
+            flex: 1; padding: 10px; border-radius: 10px; border: none;
+            cursor: pointer; font-weight: 700; font-size: 0.8rem;
+            transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 6px;
+        }
+
+        .btn-download { background: rgba(16, 185, 129, 0.15); color: var(--success-color); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-download:hover { background: var(--success-color); color: white; }
+        
+        .btn-clear { background: rgba(239, 68, 68, 0.15); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-clear:hover { background: var(--danger-color); color: white; }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            background: rgba(15, 20, 30, 0.9);
+            border: 1px solid var(--accent-color);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon { color: var(--accent-color); }
+
+        .disclaimer { margin-top: 1.5rem; text-align: center; font-size: 0.7rem; color: var(--text-dim); opacity: 0.6; letter-spacing: 1px; }
+
+        .padding-for-keyboard { padding-bottom: 300px !important; }
+
+        @media (max-width: 380px) {
+            .container { padding: 1.5rem; }
+            .display-box { font-size: 1rem; }
+        }
+
+        /* --- NEW: FIREBASE AUTH LOGUI UI STYLES --- */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.1), transparent 60%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease;
+        }
+        .login-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .login-card {
+            background: var(--card-bg);
+            padding: 3rem 2rem;
+            border-radius: 28px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255,255,255,0.08);
+            max-width: 360px;
+            width: 90%;
+        }
+        .login-card h2 { margin-bottom: 10px; font-weight: 800; color: #fff; font-size: 1.5rem; }
+        .login-card p { color: var(--text-dim); margin-bottom: 30px; font-size: 0.9rem; }
+        .btn-google {
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 12px; 
+            background: #ffffff; 
+            color: #333; 
+            box-shadow: 0 8px 25px rgba(255,255,255,0.1);
+            width: 100%;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-google:hover { background: #f8fafc; transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255,255,255,0.2); }
+        .btn-google:active { transform: translateY(0); }
+    </style>
+</head>
+<body>
+    
+    <!-- NEW: Login Overlay Screen -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <h2>PrivacyName Pro</h2>
+            <p>Access is restricted. Please sign in to continue.</p>
+            <button id="googleSignInBtn" class="btn-google">
+                <svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Sign in with Google
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (Hidden initially by inline style) -->
+    <div class="glow-bg"></div>
+    <div class="container" id="mainAppContainer" style="display: none;">
+        <!-- Top Action Icons -->
+        <div class="top-actions">
+            <!-- NEW: Logout Button -->
+            <button class="icon-btn stroke-icon" id="logoutBtn" title="Logout" style="display: none;">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </button>
+            <a href="https://t.me/online_income_max1" target="_blank" class="icon-btn telegram-btn" title="Join Telegram">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 0C5.372 0 0 5.373 0 12s5.372 12 12 12 12-5.373 12-12S18.628 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.664 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472z"/>
+                </svg>
+            </a>
+            <button class="icon-btn stroke-icon" id="openHistory" title="Recent History">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </button>
+            <button class="icon-btn stroke-icon" id="openSettings" title="Settings">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="avatar-container">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <h1>PrivacyName</h1>
+            <div class="date-display" id="currentDate">Loading date...</div>
+        </div>
+
+        <!-- 2FA Authenticator Module -->
+        <div class="two-fa-container">
+            <button class="two-fa-toggle" id="toggle2FABtn">
+                🛡️ Enable 2FA Authenticator
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="two-fa-content" id="twoFASection">
+                <div class="input-group">
+                    <textarea id="secretInput" placeholder="Paste Secret Key..."></textarea>
+                    <button id="pasteBtn" class="paste-btn">📋 Paste</button>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-sub btn-gen" id="submitBtn">Generate Code</button>
+                    <button class="btn-sub btn-del" id="deleteBtn">Reset</button>
+                </div>
+
+                <div class="result-card">
+                    <div class="otp-label">Login Code</div>
+                    <div id="otpOutput" class="otp-code">--- ---</div>
+                    <div class="progress-track">
+                        <div id="progressBar" class="progress-fill"></div>
+                    </div>
+                    <div id="timerText" class="timer-info">Ready</div>
+
+                    <button class="copy-code-btn" id="copy2FABtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Copy Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generator Section -->
+        <div class="generator-area">
+            <div class="name-block">
+                <label>First Name</label>
+                <div class="display-wrapper">
+                    <input type="text" id="firstName" class="display-box" readonly placeholder="---">
+                    <button class="btn-copy-mini" onclick="copyText('firstName', 'First Name')" title="Copy">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="name-block">
+                <label>Last Name</label>
+                <div class="display-wrapper">
+                    <input type="text" id="lastName" class="display-box" readonly placeholder="---">
+                    <button class="btn-copy-mini" onclick="copyText('lastName', 'Last Name')" title="Copy">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="name-block">
+                <label>Random Password</label>
+                <div class="display-wrapper">
+                    <input type="text" id="password" class="display-box" readonly placeholder="---">
+                    <button class="btn-copy-mini" onclick="copyText('password', 'Password')" title="Copy">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-generate" id="generateBtn">
+            <span id="btnText">⚡ Generate Profile</span>
+            <div class="spinner" id="btnSpinner"></div>
+        </button>
+
+        <p class="disclaimer">Developed by SAMI FARDEEN</p>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <span class="close-btn" onclick="closeModal('settingsModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </span>
+            </div>
+            
+            <div class="setting-item">
+                <label>Gender</label>
+                <select id="genderSet">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label>Country Style</label>
+                <select id="countrySet">
+                    <option value="bd">Bangladesh</option>
+                    <option value="in">India</option>
+                    <option value="usa">USA</option>
+                    <option value="uk">UK</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label>Password Length (1-20)</label>
+                <input type="number" id="passLength" min="1" max="20" value="8">
+            </div>
+
+            <div class="setting-item">
+                <label>Custom Password Suffix</label>
+                <div class="toggle-row">
+                    <span style="font-size:0.85rem; color:var(--text-main); font-weight:600;">Add Custom Suffix</span>
+                    <label class="switch">
+                        <input type="checkbox" id="suffixToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <input type="text" id="passSuffix" placeholder="e.g. 1-2 20:4" style="display:none; margin-top:12px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>History <span style="font-size: 0.8rem; font-weight:400; color:var(--text-dim);">(Last 24h)</span></h3>
+                <span class="close-btn" onclick="closeModal('historyModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </span>
+            </div>
+            
+            <div id="historyList"></div>
+
+            <div class="history-footer-btns">
+                <button class="btn-small btn-download" id="downloadHistory">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Save .txt
+                </button>
+                <button class="btn-small btn-clear" id="clearHistory">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast -->
+    <div class="toast" id="toast">
+        <svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span id="toastMsg">Copied!</span>
+    </div>
+
+    <!-- ORIGINAL APP LOGIC -->
+    <script>
+        // --- 1. GENERAL UI & SETTINGS LOGIC ---
+        function setCurrentDate() {
+            const dateElement = document.getElementById('currentDate');
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            dateElement.innerText = new Date().toLocaleDateString('en-US', options);
+        }
+
+        // Modals & Inputs
+        const settingsModal = document.getElementById('settingsModal');
+        const modalInputs = document.querySelectorAll('.modal-content input, .modal-content select');
+        
+        modalInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                settingsModal.classList.add('padding-for-keyboard');
+                setTimeout(() => this.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+            });
+            input.addEventListener('blur', () => setTimeout(() => settingsModal.classList.remove('padding-for-keyboard'), 100));
+        });
+
+        document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.add('active');
+        document.getElementById('openHistory').onclick = () => {
+            cleanupHistory();
+            renderHistory();
+            document.getElementById('historyModal').classList.add('active');
+        };
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        window.onclick = (e) => { if (e.target.classList.contains('modal')) closeModal(e.target.id); }
+
+        function showToast(label) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = `${label} Copied!`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Universal Copy function
+        function copyText(id, label) {
+            const inputElement = document.getElementById(id);
+            if (!inputElement.value || inputElement.value === "---") return;
+            executeCopy(inputElement.value, label, inputElement);
+        }
+
+        function executeCopy(text, label, inputElement = null) {
+            const fallbackCopy = () => {
+                if(inputElement) {
+                    inputElement.select();
+                    inputElement.setSelectionRange(0, 99999);
+                } else {
+                    const tempInput = document.createElement('textarea');
+                    tempInput.value = text;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    tempInput.setSelectionRange(0, 99999);
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                }
+                try {
+                    document.execCommand('copy');
+                    showToast(label);
+                } catch (err) { alert('Failed to copy. Please copy manually.'); }
+                if(inputElement) window.getSelection().removeAllRanges();
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showToast(label)).catch(() => fallbackCopy());
+            } else {
+                fallbackCopy();
+            }
+        }
+
+
+        // --- 2. PROFILE GENERATOR LOGIC ---
+        const names = {
+            bd: {
+                male:["Arif", "Sajid", "Rakib", "Tanvir", "Fahim", "Hasan", "Mahmud", "Tamim", "Emon", "Nayeem", "Rifat", "Zubayer", "Sakib", "Abir", "Nahid", "Farhan", "Sabbir", "Anis", "Kamal", "Imtiaz"],
+                female:["Sadia", "Sumaiya", "Tanjila", "Nusrat", "Farhana", "Mim", "Ayesha", "Habiba", "Jannat", "Lamia", "Nabila", "Raisa", "Tasnim", "Riya", "Maliha", "Zarin", "Anika", "Sultana", "Fatima", "Ishrat"],
+                last:["Ahmed", "Hossain", "Islam", "Khan", "Ali", "Rahman", "Uddin", "Chowdhury", "Sarker", "Talukder", "Miah", "Sheikh", "Patwary", "Bhuiyan", "Akter", "Biswas", "Das", "Majumder"]
+            },
+            in: {
+                male:["Arjun", "Aditya", "Rahul", "Aarav", "Vihaan", "Vivaan", "Ishaan", "Ayush", "Krishna", "Aryan", "Shaurya", "Kabir", "Rohan", "Siddharth", "Vikram", "Pranav", "Karthik"],
+                female:["Diya", "Ananya", "Aadhya", "Myra", "Saanvi", "Pari", "Ishani", "Kavya", "Navya", "Riya", "Vanya", "Zara", "Kiara", "Aarohi", "Meera", "Aditi", "Sneha"],
+                last:["Sharma", "Verma", "Gupta", "Malhotra", "Kapoor", "Singh", "Patel", "Reddy", "Iyer", "Nair", "Das", "Chatterjee", "Banerjee", "Kumar", "Mishra", "Joshi"]
+            },
+            usa: {
+                male:["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Christopher", "Daniel", "Matthew", "Anthony", "Mark", "Donald"],
+                female:["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Lisa", "Nancy", "Betty", "Sandra", "Margaret", "Ashley"],
+                last:["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzales", "Wilson", "Anderson"]
+            },
+            uk: {
+                male:["Oliver", "George", "Harry", "Noah", "Jack", "Leo", "Arthur", "Muhammad", "Oscar", "Charlie", "Henry", "Thomas", "Freddie", "Alfie", "Theo", "William"],
+                female:["Olivia", "Amelia", "Isla", "Ava", "Mia", "Ivy", "Lily", "Isabella", "Rosie", "Sophia", "Florence", "Willow", "Sienna", "Alice", "Evelyn", "Phoebe"],
+                last:["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Johnson", "Davies", "Robinson", "Wright", "Thompson", "Evans", "Walker", "White", "Edwards"]
+            }
+        };
+
+        let historyData = JSON.parse(localStorage.getItem('name_history')) ||[];
+        const genBtn = document.getElementById('generateBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const passLengthInput = document.getElementById('passLength');
+        const historyList = document.getElementById('historyList');
+        const suffixToggle = document.getElementById('suffixToggle');
+        const passSuffixInput = document.getElementById('passSuffix');
+
+        function cleanupHistory() {
+            const now = Date.now();
+            historyData = historyData.filter(item => (now - item.timestamp) < (24 * 60 * 60 * 1000));
+            localStorage.setItem('name_history', JSON.stringify(historyData));
+        }
+
+        window.onload = () => {
+            setCurrentDate();
+            cleanupHistory();
+            document.getElementById('genderSet').value = localStorage.getItem('def_gender') || 'male';
+            document.getElementById('countrySet').value = localStorage.getItem('def_country') || 'bd';
+            passLengthInput.value = localStorage.getItem('def_passLen') || 8;
+            suffixToggle.checked = localStorage.getItem('def_suffixToggle') === 'true';
+            passSuffixInput.value = localStorage.getItem('def_suffixVal') || '';
+            passSuffixInput.style.display = suffixToggle.checked ? 'block' : 'none';
+            renderHistory();
+        };
+
+        suffixToggle.addEventListener('change', () => {
+            passSuffixInput.style.display = suffixToggle.checked ? 'block' : 'none';
+            localStorage.setItem('def_suffixToggle', suffixToggle.checked);
+            if(suffixToggle.checked) passSuffixInput.focus();
+        });
+        passSuffixInput.addEventListener('input', () => localStorage.setItem('def_suffixVal', passSuffixInput.value));
+
+        genBtn.onclick = () => {
+            btnText.style.opacity = '0';
+            btnSpinner.style.display = 'block';
+            
+            const inputs = document.querySelectorAll('.display-box');
+            inputs.forEach(input => {
+                input.classList.remove('animate-text');
+                void input.offsetWidth; // trigger reflow
+            });
+
+            setTimeout(() => {
+                const country = document.getElementById('countrySet').value;
+                const gender = document.getElementById('genderSet').value;
+                const len = parseInt(passLengthInput.value) || 8;
+
+                const fName = names[country][gender][Math.floor(Math.random() * names[country][gender].length)];
+                const lName = names[country].last[Math.floor(Math.random() * names[country].last.length)];
+                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                let pass = "";
+                for (let i = 0; i < len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                if (suffixToggle.checked && passSuffixInput.value) pass += passSuffixInput.value;
+
+                document.getElementById('firstName').value = fName;
+                document.getElementById('lastName').value = lName;
+                document.getElementById('password').value = pass;
+
+                inputs.forEach(input => input.classList.add('animate-text'));
+
+                const entry = { name: `${fName} ${lName}`, pass: pass, timestamp: Date.now() };
+                historyData.unshift(entry);
+                localStorage.setItem('name_history', JSON.stringify(historyData));
+                localStorage.setItem('def_gender', gender);
+                localStorage.setItem('def_country', country);
+                localStorage.setItem('def_passLen', len);
+
+                btnSpinner.style.display = 'none';
+                btnText.style.opacity = '1';
+            }, 350);
+        };
+
+        function renderHistory() {
+            historyList.innerHTML = historyData.length === 0 ? '<p style="color:#94a3b8; margin:20px 0; text-align:center; font-size:0.9rem;">No history in last 24h.</p>' : '';
+            historyData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-info">
+                        <strong>${item.name}</strong>
+                        <span>Pass: ${item.pass}</span>
+                    </div>
+                    <button class="del-btn" onclick="deleteHistoryItem(${index})" title="Delete">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                `;
+                historyList.appendChild(div);
+            });
+        }
+        window.deleteHistoryItem = function(index) {
+            historyData.splice(index, 1);
+            localStorage.setItem('name_history', JSON.stringify(historyData));
+            renderHistory();
+        };
+        document.getElementById('clearHistory').onclick = () => {
+            if(confirm("Are you sure you want to delete all history?")) {
+                historyData =[];
+                localStorage.setItem('name_history', JSON.stringify(historyData));
+                renderHistory();
+            }
+        };
+        document.getElementById('downloadHistory').onclick = () => {
+            if(historyData.length === 0) return alert("History is empty!");
+            let content = "PrivacyName Pro - History (Last 24h)\nDate: " + document.getElementById('currentDate').innerText + "\n====================================\n\n";
+            historyData.forEach((item, i) => { content += `${i+1}) Name: ${item.name} \n   Password: ${item.pass}\n\n`; });
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'generated_profile_history.txt';
+            a.click();
+        };
+
+
+        // --- 3. 2FA AUTHENTICATOR LOGIC ---
+        const toggle2FABtn = document.getElementById('toggle2FABtn');
+        const twoFASection = document.getElementById('twoFASection');
+        
+        toggle2FABtn.addEventListener('click', () => {
+            const isActive = twoFASection.classList.toggle('active');
+            toggle2FABtn.classList.toggle('active');
+            if (isActive) {
+                // Adjust scroll for better view on mobile
+                setTimeout(() => {
+                    twoFASection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 150);
+            }
+        });
+
+        const secretInput = document.getElementById('secretInput');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const otpOutput = document.getElementById('otpOutput');
+        const progressBar = document.getElementById('progressBar');
+        const timerText = document.getElementById('timerText');
+        const copy2FABtn = document.getElementById('copy2FABtn');
+
+        let intervalId = null;
+        let currentSecret = null;
+
+        // Paste Logic
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                secretInput.value = text;
+                const originalText = pasteBtn.innerHTML;
+                pasteBtn.innerHTML = "✅ Pasted!";
+                setTimeout(() => pasteBtn.innerHTML = originalText, 1000);
+            } catch (err) {
+                secretInput.focus();
+                try { document.execCommand('paste'); } catch(e) {}
+                secretInput.placeholder = "Long press & paste manually...";
+                alert("Auto-paste blocked by browser. Please long-press inside the box and select 'Paste'.");
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            const raw = secretInput.value.trim();
+            if (intervalId) clearInterval(intervalId);
+            otpOutput.innerHTML = '<div class="spinner accent"></div>';
+            progressBar.style.width = '0%';
+            timerText.innerText = "Processing...";
+            
+            setTimeout(() => {
+                if (!raw) {
+                    otpOutput.innerText = "Empty!";
+                    otpOutput.style.color = "var(--danger-color)";
+                    timerText.innerText = "Please enter key";
+                    return;
+                }
+                try {
+                    const secret = extractSecret(raw);
+                    validateSecret(secret);
+                    currentSecret = secret;
+                    otpOutput.style.color = "var(--accent-color)";
+                    updateLoop();
+                    intervalId = setInterval(updateLoop, 1000);
+                } catch (e) {
+                    otpOutput.innerText = "Error";
+                    otpOutput.style.color = "var(--danger-color)";
+                    timerText.innerText = "Invalid Key";
+                }
+            }, 300);
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            if (intervalId) clearInterval(intervalId);
+            currentSecret = null;
+            secretInput.value = "";
+            secretInput.placeholder = "Paste Secret Key...";
+            otpOutput.innerText = "--- ---";
+            otpOutput.style.color = "var(--accent-color)";
+            progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = "var(--accent-color)";
+            timerText.innerText = "Ready";
+        });
+
+        copy2FABtn.addEventListener('click', () => {
+            const code = otpOutput.innerText.replace(/\s/g, '');
+            if (!code || code.length < 6 || code.includes("-") || code === "Error") return;
+            executeCopy(code, "2FA Code");
+        });
+
+        function updateLoop() {
+            if (!currentSecret) return;
+            const epoch = Math.floor(Date.now() / 1000);
+            const timeStep = 30;
+            const remaining = timeStep - (epoch % timeStep);
+            const counter = Math.floor(epoch / timeStep);
+            const code = generateTOTP(currentSecret, counter);
+            
+            otpOutput.innerText = code.slice(0, 3) + " " + code.slice(3);
+            const percent = (remaining / timeStep) * 100;
+            progressBar.style.width = percent + "%";
+            timerText.innerText = `${remaining}s remaining`;
+
+            if (remaining <= 5) {
+                progressBar.style.backgroundColor = "var(--danger-color)";
+                otpOutput.style.color = "var(--danger-color)";
+                otpOutput.style.textShadow = "0 0 15px var(--danger-glow)";
+            } else {
+                progressBar.style.backgroundColor = "var(--accent-color)";
+                otpOutput.style.color = "var(--accent-color)";
+                otpOutput.style.textShadow = "0 0 15px var(--accent-glow)";
+            }
+        }
+
+        // 2FA Helpers
+        function extractSecret(input) {
+            if (input.startsWith('otpauth://')) {
+                try {
+                    const url = new URL(input);
+                    const s = url.searchParams.get('secret');
+                    if (s) return s.replace(/\s/g, '').toUpperCase();
+                } catch(e) {}
+            }
+            return input.replace(/\s/g, '').toUpperCase();
+        }
+
+        function validateSecret(s) {
+            if (s.length < 8) throw new Error();
+            if (!/^[A-Z2-7]+$/.test(s)) throw new Error();
+        }
+
+        // HMAC-SHA1 & TOTP Generation
+        function generateTOTP(s, c) {
+            const k = base32tohex(s);
+            const e = leftpad(dec2hex(c), 16, '0');
+            const h = hex_hmac_sha1(k, e);
+            const o = hex2dec(h.substring(h.length - 1));
+            let otp = (hex2dec(h.substr(o * 2, 8)) & hex2dec('7fffffff')) + '';
+            return otp.substr(otp.length - 6, 6);
+        }
+        function base32tohex(b) {
+            const c = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let bits = "", hex = "";
+            for (let i = 0; i < b.length; i++) bits += leftpad(c.indexOf(b.charAt(i)).toString(2), 5, '0');
+            for (let i = 0; i + 4 <= bits.length; i += 4) hex += parseInt(bits.substr(i, 4), 2).toString(16);
+            return hex;
+        }
+        function leftpad(s, l, p) { return s.length >= l ? s : new Array(l - s.length + 1).join(p) + s; }
+        function dec2hex(s) { return (s < 15.5 ? '0' : '') + Math.round(s).toString(16); }
+        function hex2dec(s) { return parseInt(s, 16); }
+
+        function hex_hmac_sha1(k,d){return rstr2hex(rstr_hmac_sha1(hex2rstr(k),hex2rstr(d)))}
+        function rstr_hmac_sha1(k,d){var b=rstr2binb(k);if(b.length>16)b=binb_sha1(b,k.length*8);var p=Array(16),o=Array(16);for(var i=0;i<16;i++){p[i]=b[i]^0x36363636;o[i]=b[i]^0x5C5C5C5C}var h=binb_sha1(p.concat(rstr2binb(d)),512+d.length*8);return binb2rstr(binb_sha1(o.concat(h),512+160))}
+        function hex2rstr(h){var r="";for(var i=0;i<h.length;i+=2)r+=String.fromCharCode(parseInt(h.substr(i,2),16));return r}
+        function rstr2hex(i){var h="0123456789abcdef",o="";for(var x=0;x<i.length;x++){var c=i.charCodeAt(x);o+=h.charAt((c>>>4)&0x0F)+h.charAt(c&0x0F)}return o}
+        function rstr2binb(i){var o=Array(i.length>>2);for(var x=0;x<o.length;x++)o[x]=0;for(var x=0;x<i.length*8;x+=8)o[x>>5]|=(i.charCodeAt(x/8)&0xFF)<<(24-x%32);return o}
+        function binb2rstr(i){var o="";for(var x=0;x<i.length*32;x+=8)o+=String.fromCharCode((i[x>>5]>>>(24-x%32))&0xFF);return o}
+        function binb_sha1(x,l){x[l>>5]|=0x80<<(24-l%32);x[((l+64>>9)<<4)+15]=l;var w=Array(80),a=1732584193,b=-271733879,c=-1732584194,d=271733878,e=-1009589776;for(var i=0;i<x.length;i+=16){var oa=a,ob=b,oc=c,od=d,oe=e;for(var j=0;j<80;j++){if(j<16)w[j]=x[i+j];else w[j]=bit_rol(w[j-3]^w[j-8]^w[j-14]^w[j-16],1);var t=safe_add(safe_add(bit_rol(a,5),sha1_ft(j,b,c,d)),safe_add(safe_add(e,w[j]),sha1_kt(j)));e=d;d=c;c=bit_rol(b,30);b=a;a=t}a=safe_add(a,oa);b=safe_add(b,ob);c=safe_add(c,oc);d=safe_add(d,od);e=safe_add(e,oe)}return Array(a,b,c,d,e)}
+        function sha1_ft(t,b,c,d){if(t<20)return(b&c)|((~b)&d);if(t<40)return b^c^d;if(t<60)return(b&c)|(b&d)|(c&d);return b^c^d}
+        function sha1_kt(t){return(t<20)?1518500249:(t<40)?1859775393:(t<60)?-1894007588:-899497514}
+        function safe_add(x,y){var l=(x&0xFFFF)+(y&0xFFFF);var m=(x>>16)+(y>>16)+(l>>16);return(m<<16)|(l&0xFFFF)}
+        function bit_rol(n,c){return(n<<c)|(n>>>(32-c))}
+    </script>
+
+    <!-- NEW: FIREBASE AUTH LOGIC (Modular Web SDK) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBoVwM9PcafBRi2lFDKD2x4xA75qgUCB0U",
+            authDomain: "privacyname-a9535.firebaseapp.com",
+            projectId: "privacyname-a9535",
+            storageBucket: "privacyname-a9535.firebasestorage.app",
+            messagingSenderId: "290095448173",
+            appId: "1:290095448173:web:f633a489af8f7552d03f64",
+            measurementId: "G-KD0FP4X46W"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Elements
+        const loginOverlay = document.getElementById('loginOverlay');
+        const mainAppContainer = document.getElementById('mainAppContainer');
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Original button innerHTML to restore on fail
+        const originalBtnHTML = googleSignInBtn.innerHTML;
+
+        // Listen to Auth State Changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Logged In
+                loginOverlay.classList.add('hidden');
+                mainAppContainer.style.display = 'block'; // Show Website
+                logoutBtn.style.display = 'grid'; // Show Logout (Icon-btn uses grid)
+            } else {
+                // Not Logged In
+                loginOverlay.classList.remove('hidden');
+                mainAppContainer.style.display = 'none'; // Hide Website
+                logoutBtn.style.display = 'none'; // Hide Logout
+            }
+        });
+
+        // Google Sign In action
+        googleSignInBtn.addEventListener('click', async () => {
+            try {
+                googleSignInBtn.style.opacity = '0.7';
+                googleSignInBtn.innerText = 'Signing in...';
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Login failed:", error);
+                alert("Failed to sign in. Please try again.");
+                googleSignInBtn.style.opacity = '1';
+                googleSignInBtn.innerHTML = originalBtnHTML;
+            }
+        });
+
+        // Logout action
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).catch((error) => console.error("Sign out failed:", error));
+        });
+    </script>
+
+</body>
+</html>
